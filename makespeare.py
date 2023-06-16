@@ -162,13 +162,13 @@ class MultiHeadAttention(nn.Module):
 
     #This is better understood with a diagram so here it is:
     #[[1 2 3
-    #  1 2 3
+    #  1 2 3    <- Head #1
     #  1 2 3]
     # [4 5 6
-    #  4 5 6
+    #  4 5 6    <- Head #2
     #  4 5 6]
     # [7 8 9
-    #  7 8 9
+    #  7 8 9    <- Head #3
     #  7 8 9]]
     #We wanna transpose the matrix such that we get:
     #[[1 2 3
