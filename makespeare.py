@@ -20,13 +20,14 @@ num_generated_tokens = 10000  #Num of tokens generated from a trained model
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 #Download dataset (I have another public repo just for datasets I used for this project)
-!wget 'https://raw.githubusercontent.com/bl0nder/makespeare/main/shakespeare_input.txt'
+!wget 'https://raw.githubusercontent.com/bl0nder/makespeare_datasets/main/shakespeare_input.txt'
 
 #Read the dataset
 with open('shakespeare_input.txt', 'r', encoding='utf-8') as f:
     input_text = f.read()
-    
-#Charcater-Level Tokenization
+
+#------------TOKENISATION------------#
+#Character-Level Tokenization
 char_list = sorted(list(set(input_text)))
 vocab_size = len(char_list)
 
@@ -59,7 +60,7 @@ train_idx = int(len(token_ids)*0.9)
 train_data = token_ids[0:train_idx]
 val_data = token_ids[train_idx:]
 
-#Function to pick random minibatch from train/val data
+#------------MINI-BATCH SELECTION------------#
 def minibatch(train_data, val_data, context_length, batch_size, train=True):
 
   #Selecting whether to sample from training or validation data
@@ -80,7 +81,7 @@ def minibatch(train_data, val_data, context_length, batch_size, train=True):
 
   return x_batch, y_batch
 
-#Class for embeddings 
+#------------EMBEDDING------------#
 class InputEmbedding(nn.Module):
   def __init__(self, context_length):
     super(InputEmbedding, self).__init__()
@@ -100,7 +101,7 @@ class InputEmbedding(nn.Module):
     final_embedding = token_embedding + pos_embedding
     return final_embedding
 
-#Parallel multi-head attention
+#------------ATTENTION!------------#
 class MultiHeadAttention(nn.Module):
   def __init__(self, batch_size, embedding_len, num_heads, dropout_prob=0.2, attention_mask=False):
     super(MultiHeadAttention, self).__init__()
@@ -212,7 +213,7 @@ class MultiHeadAttention(nn.Module):
 
     return attention, attention_weights
   
-#Code for the encoder - Versions without the encoder give better results but here it is just for reference  
+#------------ENCODER------------# 
 class EncoderBlock(nn.Module):
   def __init__(self, vocab_size, context_length, embedding_len, dropout_prob = 0.05):
 
@@ -273,29 +274,24 @@ class Encoder(nn.Module):
     self.embedding_len = embedding_len
     self.dropout_prob = dropout_prob
 
-    #Required NN layers
-    self.token_embedding_layer = nn.Embedding(vocab_size, embedding_len).to(DEVICE)
-    self.pos_embedding_layer = nn.Embedding(context_length, embedding_len).to(DEVICE)
-    self.embedding_layer = InputEmbedding(context_length)
+    #List of encoder blocks
     self.encoder_blocks = nn.ModuleList([EncoderBlock(vocab_size, context_length, embedding_len, self.dropout_prob) for i in range(self.num_encoder_blocks)])
-    self.dropout = nn.Dropout(dropout_prob).to(DEVICE)
-
-    torch.nn.init.normal_(self.token_embedding_layer.weight, mean=0, std=0.02)
-    torch.nn.init.normal_(self.pos_embedding_layer.weight, mean=0, std=0.02)
 
   def forward(self, x):
-    encoder_input = self.embedding_layer(x)
+    encoder_input = x
     for i, block in enumerate(self.encoder_blocks):
       encoder_input = block(encoder_input, self.batch_size, self.num_heads).to(DEVICE)
 
 
     encoder_output = encoder_input
     return encoder_output
-  
+
+#------------DECODER------------#
 class DecoderBlock(nn.Module):
   def __init__(self, batch_size, vocab_size, context_length, embedding_len, num_heads, dropout_prob = 0.05):
-
     super(DecoderBlock, self).__init__()
+    
+    #Attributes
     self.batch_size = batch_size
     self.vocab_size = vocab_size
     self.context_length = context_length
@@ -303,8 +299,17 @@ class DecoderBlock(nn.Module):
     self.num_heads = num_heads
     self.dropout_prob = dropout_prob
     self.fnn_factor = 4
+    
+    #NN Layers
+    #Masked MHSA
     self.masked_mhsa_layer = MultiHeadAttention(batch_size, embedding_len, num_heads, 0.2, True)
     self.normalisation_mhsa = nn.LayerNorm(embedding_len)
+
+    #Cross attention (Uncomment in encoder-decoder transformer)
+    # self.cross_mha_layer = MultiHeadAttention(batch_size, embedding_len, num_heads, 0.2)
+    # self.normalisation_cross_mha = nn.LayerNorm(embedding_len)
+    
+    #Feed-forward NN
     self.normalisation_fnn = nn.LayerNorm(embedding_len)
     self.fnn = nn.Sequential(
         nn.Linear(embedding_len, embedding_len*self.fnn_factor),
@@ -313,6 +318,7 @@ class DecoderBlock(nn.Module):
         nn.Dropout(self.dropout_prob)
     )
 
+    #Weight initialisation
     self.fnn.apply(self._init_weights)
 
   def _init_weights(self, module):
@@ -320,13 +326,18 @@ class DecoderBlock(nn.Module):
       torch.nn.init.normal_(module.weight, mean=0, std=0.02)
 
   def forward(self, x, q_cross, k_cross):
-    #Masked multi head self attention - MHSA + AddNorm
+    #Masked multi-head self attention
     masked_mhsa_pre_norm = self.normalisation_mhsa(x)
     masked_mhsa = self.masked_mhsa_layer(masked_mhsa_pre_norm, masked_mhsa_pre_norm, masked_mhsa_pre_norm)
     masked_mhsa_output = masked_mhsa + x
 
-    # #Feedforward NN
-    fnn_pre_norm = self.normalisation_fnn(masked_mhsa_output)
+    #Multi-head cross attention - Uncomment the following 3 lines if using encoder-decoder transformer. Redundant in decoder-only model (such as this one) since there is no encoder output to calculate cross attention with
+    # cross_mha_pre_norm = self.normalisation_cross_mha(masked_mhsa_output)
+    # cross_mha = self.cross_mha_layer(cross_mha_pre_norm, k_cross, q_cross)
+    # cross_mha_output = cross_mha + masked_mhsa_output
+      
+    #Feedforward NN
+    fnn_pre_norm = self.normalisation_fnn(masked_mhsa_output)    #If cross attention is being used, replace masked_mhsa_output here with cross_mha_output
     fnn = self.fnn(fnn_pre_norm)
     fnn_output = fnn + masked_mhsa_output
 
@@ -344,28 +355,33 @@ class Decoder(nn.Module):
     self.embedding_len = embedding_len
     self.num_heads = num_heads
     self.dropout_prob = dropout_prob
-
-    self.input_embedding = InputEmbedding(context_length)
+    
+    #List of decoder blocks
     self.decoder_blocks = nn.ModuleList([DecoderBlock(batch_size, vocab_size, context_length, embedding_len, num_heads, dropout_prob) for i in range(num_decoder_blocks)])
 
   def forward(self, x):
-    x_embedding = self.input_embedding(x)
-
-    decoder_input = x_embedding
-
+    #Loop through all decoder blocks and process inputs sequentially (output of a block is input to the next)
+    decoder_input = x
     for i, block in enumerate(self.decoder_blocks):
       decoder_input = block(decoder_input, x_embedding, x_embedding)
 
     decoder_output = decoder_input
     return decoder_output
-  
-class Transformer(nn.Module):
 
+#------------TRANSFORMER------------#
+class Transformer(nn.Module):
     def __init__(self):
       super(Transformer, self).__init__()
       self.decoder = Decoder(num_decoder_blocks, batch_size, vocab_size, context_length, embedding_len, num_heads, 0.2)
+      
+      #NN Layers
       self.normalisation = nn.LayerNorm(embedding_len) # final layer norm
       self.linear = nn.Linear(embedding_len, vocab_size)
+      
+      #Token embedding
+      self.input_embedding = InputEmbedding(context_length)
+
+      #Weight Initialisation
       self.apply(self._init_weights)
 
     def _init_weights(self, module):
@@ -375,16 +391,19 @@ class Transformer(nn.Module):
         torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def forward(self, x, targets=None):
+      #Input embeddings
+      x_embeddings = self.input_embedding(x)  
 
-      #Get decoder output, normalise it, and obtain logits
-      decoder_output = self.decoder(x)
+      #Uncomment the following line if using an encoder-decoder model
+      # encoder_output = self.encoder(x_embeddings)
+      decoder_output = self.decoder(x_embeddings)  #Replace x_embeddings with encoder_output if using an encoder-decoder model
       normalised_decoder_output = self.normalisation(decoder_output)
       logits = self.linear(normalised_decoder_output)
-
+    
+      #If targets are given, compute loss
       if targets is None:
         loss = None
       else:
-        #If targets given, compute loss
         logits = logits.reshape(batch_size, context_length, -1)
         targets = targets.reshape(batch_size*context_length, -1)
         loss = F.cross_entropy(logits, targets)
@@ -392,7 +411,7 @@ class Transformer(nn.Module):
       return logits, loss
 
     def generate(self, x, max_new_tokens):
-      for _ in range(max_new_tokens):
+      for i in range(max_new_tokens):
         x_latest = x[:, -context_length:]
         logits, loss = self(x_latest)
         logits = logits[:, -1, :]
@@ -435,14 +454,13 @@ def val_loss (model, val_iterations):
     model.train()
     return out
 
-#Training loop
 transformer = Transformer().to(DEVICE)
 optimizer = torch.optim.AdamW(transformer.parameters(), lr=learning_rate)
-
 print(sum(p.numel() for p in transformer.parameters())/1e6, 'M parameters') #Number of params in model
 
+#Training loop
 for i in range(max_iterations):
-
+  
   #After every eval_interval iterations, compute validation loss
   if (i+1) % eval_interval == 0:
     losses = val_loss(transformer, val_iterations)
