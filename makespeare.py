@@ -489,7 +489,6 @@ for i in range(max_iterations):
 #Using a pre-trained model by loading a checkpoint
 model = Transformer().to(DEVICE)
 state_dict = torch.load('models/checkpoint_ctx256_iter150000_character_encoding.pth') #Load saved model  
-model.load_state_dict(state_dict['state_dict']) #Load state dictionary into model
 
 #When I trained the model, I had an embedding layer in the Decoder class instead of the Transformer class, which I have changed since then. In order for the model to work, 2 of the keys need to be renamed. 
 #Comment the following 4 lines if another model is trained.
@@ -498,6 +497,7 @@ state_dict['state_dict']['input_embedding.pos_embedding_layer.weight'] = state_d
 del state_dict['state_dict']['decoder.input_embedding.embedding_layer.weight']
 del state_dict['state_dict']['decoder.input_embedding.pos_embedding_layer.weight']
 
+model.load_state_dict(state_dict['state_dict']) #Load state dictionary into model
 
 #Generating Shakespearean text
 context = torch.ones((batch_size,context_length), dtype=torch.long, device=DEVICE)
