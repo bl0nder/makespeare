@@ -363,7 +363,7 @@ class Decoder(nn.Module):
     #Loop through all decoder blocks and process inputs sequentially (output of a block is input to the next)
     decoder_input = x
     for i, block in enumerate(self.decoder_blocks):
-      decoder_input = block(decoder_input, x_embedding, x_embedding)
+      decoder_input = block(decoder_input, x, x)
 
     decoder_output = decoder_input
     return decoder_output
