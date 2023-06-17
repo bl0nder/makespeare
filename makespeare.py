@@ -474,7 +474,7 @@ for i in range(max_iterations):
     'num_decoder_blocks': num_decoder_blocks,
     'state_dict': transformer.state_dict()  #Most important thing to save
     }
-    torch.save(checkpoint, f'checkpoint_ctx{context_length}_batchsize{batch_size}_iter{i+1}_character_encoding.pth')
+    torch.save(checkpoint, f'models/checkpoint_ctx{context_length}_iter{i+1}_character_encoding.pth')
 
   #Get minibatch of training data and compute loss
   x, y = minibatch(train_data, val_data, context_length, batch_size, True)
@@ -488,7 +488,7 @@ for i in range(max_iterations):
 #------------TEXT GENERATION------------#
 #Using a pre-trained model by loading a checkpoint
 model = Transformer().to(DEVICE)
-state_dict = torch.load('checkpoint_ctx256_batchsize32_iter150000_character_encoding.pth') #Load saved model  
+state_dict = torch.load('models/checkpoint_ctx256_iter150000_character_encoding.pth') #Load saved model  
 model.load_state_dict(state_dict['state_dict']) #Load state dictionary into model
 
 #Generating Shakespearean text
