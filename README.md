@@ -3,9 +3,12 @@ Makespeare is a transformer that I coded from scratch and trained on the tiny-sh
 
 The following details the transformer architecture and the things I learnt while implementing it.
 
-## Tokenisation
-The input data was a text file containing a number of Shakespeare's plays. Passing the entire data on to the model is of little use since that would be the equivalent of training the model on a single sample with over 1 million characters. Instead, if the data is partitioned into several parts (**Tokens**), then sampling these tokens can lead to the creation of a much larger set of samples to train the model on. The process of paritioning the data in the aforementioned manner is known as **Tokenisation**. 
+## Embedding
+In order for the transformer to be able to interpret text, we need to convert the input text into something a computer can understand - numbers. This is done by:
 
-Here are a few (fairly intuitive) ways to tokenise a given piece of text:
+1. Tokenisation: Splitting up text into multiple parts, each part being a **token**
+2. Encoding: Giving a unique numerical ID to each unique token. A unique word is thus mapped to a unique numerical ID.
+3. Embedding: Converting each token into an n-dimensional vector. This essentially converts words into points in n-dimensional space which can then be played around with. For example, how similar two words are can be measured by the distance between their corresponding points in n-dimensional space (similarity increases the closer the points are).
 
-1. Word-based Tokenisation: We can simply split the text data into its constituent words (To be continued...)
+### Ways to Split Text Up
+1. Word-based Tokenisation: Split the input text into its constituent words. (To be continued)
