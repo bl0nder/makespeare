@@ -23,5 +23,6 @@ For the transformer to be able to interpret text, we need to convert the input t
 ### 3. Vectorisation: 
 - Converting each token into an n-dimensional vector.
 - This essentially converts words into points in n-dimensional space which can then be played around with.
-- For example, how similar two words are can be measured by the distance between their corresponding points in n-dimensional space (similarity increases the closer the points are). 
+- For example, how similar two words are can be measured by the distance between their corresponding points in n-dimensional space (similarity increases the closer the points are).
+- The dimension of each such vector is fixed and corresponds to `embedding_len` in the code. Some sources also refer to this as `d_model` (model dimension).
 
