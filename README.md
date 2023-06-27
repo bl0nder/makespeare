@@ -1,4 +1,4 @@
-# Makespeare
+# 🖋️ Makespeare
 Makespeare is a GPT-style transformer that I coded from scratch and trained on the tiny-shakespeare dataset. This idea is inspired by Andrej Karpathy's video (https://youtu.be/kCc8FmEb1nY) which I used a reference only to overcome certain obstacles. 
 
 ## 🛠️ Tools
@@ -91,7 +91,7 @@ The computed attention matrix is added to the attention block's input matrix. Th
 
 The residual output then undergoes normalisation for better and faster training.
 
-```mermaid
+<>```mermaid
 graph BT;
 id1(Input) --> id2(Attention_Block)
 id1(Input) --> id3(Residual)
@@ -101,11 +101,11 @@ style id1 fill:#005f73, stroke:#005f73
 style id2 fill:#0a9396, stroke:#0a9396
 style id3 fill:#ca6702, stroke:#ca6702
 style id4 fill:#bb3e03, stroke:#bb3e03
-```
+<>```
 
 Note: Makespeare makes use of a slightly modified version of this step wherein the attention block's input matrix undergoes normalisation, the attention matrix is computed using this normalised input, and finally, the residual computation is performed. This is known as **pre-normalisation** and is simply a rearrangement of the aforementioned order of steps as follows:
 
-```mermaid
+<>```mermaid
 graph BT;
 id1(Input) --> id4(Normalisation)
 id1(Input) --> id3(Residual)
@@ -115,4 +115,7 @@ style id1 fill:#005f73, stroke:#005f73
 style id2 fill:#0a9396, stroke:#0a9396
 style id3 fill:#ca6702, stroke:#ca6702
 style id4 fill:#bb3e03, stroke:#bb3e03
-```
+<>```
+
+#### Feedforward Neural Network
+The output from the previous step is fed to a feedforward neural network. 
