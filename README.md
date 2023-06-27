@@ -93,30 +93,47 @@ The residual output then undergoes normalisation for better and faster training.
 
 ```mermaid
 graph BT;
-id1(Input) --> id2(Attention_Block)
-id1(Input) --> id3(Residual)
-id2(Attention_Block) --> id3(Residual)
-id3(Residual) --> id4(Normalisation)
+id1(Input) --> id2(Attention)
+id1(Input) --> id3((+))
+id2(Attention) --> id3((+))
+id3((+)) --> id4(Residual)
+id4(Residual) --> id5(Normalisation)
 style id1 fill:#005f73, stroke:#005f73
 style id2 fill:#0a9396, stroke:#0a9396
 style id3 fill:#ca6702, stroke:#ca6702
 style id4 fill:#bb3e03, stroke:#bb3e03
+style id5 fill:#9b2226, stroke:#9b2226
 ```
 
 Note: Makespeare makes use of a slightly modified version of this step wherein the attention block's input matrix undergoes normalisation, the attention matrix is computed using this normalised input, and finally, the residual computation is performed. This is known as **pre-normalisation** and is simply a rearrangement of the aforementioned order of steps as follows:
 
 ```mermaid
 graph BT;
-id1(Input) --> id4(Normalisation)
-id1(Input) --> id3(Residual)
-id2(Attention_Block) --> id3(Residual)
-id4(Normalisation) --> id2(Attention_Block)
+id1(Input) --> id5(Normalisation)
+id1(Input) --> id3((+))
+id2(Attention) --> id3((+))
+id3((+)) --> id4(Residual)
+id5(Normalisation) --> id2(Attention)
 style id1 fill:#005f73, stroke:#005f73
 style id2 fill:#0a9396, stroke:#0a9396
 style id3 fill:#ca6702, stroke:#ca6702
 style id4 fill:#bb3e03, stroke:#bb3e03
+style id5 fill:#9b2226, stroke:#9b2226
 ```
 
 
 #### Feedforward Neural Network
-The output from the previous step is fed to a feedforward neural network. A residual connection and a normlaisation layer are utilised (similar to the previous step) as well.
+The output from the previous step is fed to a feedforward neural network.
+```mermaid
+graph BT;
+id1(Attention_Output) --> id2(Normalisation)
+id2(Normalisation) --> id3(Feedforward_NN)
+id3(Feedforward_NN) --> id4((+))
+id1(Attention_Output) --> id4((+))
+id4([+]) --> id5(Residual)
+style id1 fill:#005f73, stroke:#005f73
+style id2 fill:#0a9396, stroke:#0a9396
+style id3 fill:#ca6702, stroke:#ca6702
+style id4 fill:#bb3e03, stroke:#bb3e03
+style id5 fill:#9b2226, stroke:#9b2226
+```
