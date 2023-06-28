@@ -148,3 +148,6 @@ style id5 fill:#9b2226, stroke:#9b2226
 
 ### Decoder
 Similar to GPT, Makespeare is a decoder-only transformer.
+
+#### Multi Head Causal Self Attention
+Attention mechanism similar to dot product self attention with the only difference being that query values are not given access to any succeeding key-value pairs. In other words, no future tokens are accessed by the decoder while predicting the current token.
