@@ -29,7 +29,7 @@ We know't, we know't.
 ...
 ```
 
-## Transformer Architecture
+## 🏗️ Transformer Architecture
 ### Input Embedding
 For the transformer to be able to interpret text, we need to convert the input text into something a computer can understand - :sparkles:Numbers:sparkles:. This is done by:
 
@@ -52,12 +52,17 @@ For the transformer to be able to interpret text, we need to convert the input t
 - For example, how similar two words are can be measured by the distance between their corresponding points in n-dimensional space (similarity increases the closer the points are).
 - The dimension of each such vector is fixed and corresponds to `embedding_len` in the code. Some sources also refer to this as `d_model` (model dimension).
 
+---
+
 ### Positional Embedding
 Matrix of learnable vectors that represent the respective position of each token in a sentence. 
 
 Such embeddings allow the transformer to learn how words need to be in a certain order to make sense in a sentence.
 
-### Encoder
+---
+
+### Encoder (Not Used in Model)
+
 #### Multi-Head Dot Product Self Attention
 Mechanism through which the model can learn which words to focus on in a particular sentence. Attention is computed by:
 1. Generating 3 matrices, namely, the Query (Q), Key (K) and Value (V) as follows:
@@ -124,6 +129,7 @@ style id5 fill:#9b2226, stroke:#9b2226
 
 #### Feedforward Neural Network
 The output from the previous step is fed to a feedforward neural network.
+
 ```mermaid
 graph BT;
 id1(Attention_Output) --> id2(Normalisation)
@@ -137,3 +143,8 @@ style id3 fill:#ca6702, stroke:#ca6702
 style id4 fill:#bb3e03, stroke:#bb3e03
 style id5 fill:#9b2226, stroke:#9b2226
 ```
+
+<hr>
+
+### Decoder
+Similar to GPT, Makespeare is a decoder-only transformer.
