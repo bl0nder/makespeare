@@ -151,3 +151,14 @@ Similar to GPT, Makespeare is a decoder-only transformer.
 
 #### Multi Head Causal Self Attention
 Attention mechanism similar to dot product self attention with the only difference being that query values are not given access to any succeeding key-value pairs. In other words, no future tokens are accessed by the decoder while predicting the current token.
+
+A `(context_length, context_length)` mask is used to accomplish this. The mask is set to $-\infty$ at positions corresponding to future tokens. 
+
+```math
+Mask = \begin{bmatrix} 1 & -\infty & -\infty\\1 & 1 & -\infty\\1 & 1 & 1 \end{bmatrix},
+\\QK^T = \begin{bmatrix} a & b & c\\d & e & f\\g & h & i \end{bmatrix}
+```
+
+```math
+QK^T + Mask = \begin{bmatrix} a & -\infty & -\infty\\d & e & -\infty\\g & h & i \end{bmatrix},
+```
